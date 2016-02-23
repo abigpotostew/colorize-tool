@@ -5,6 +5,8 @@
 import controlP5.*;
 import java.awt.Color;
 
+import java.awt.Canvas;
+
 ColorWheel w;
 final int WIDTH = 200;
 
@@ -14,6 +16,11 @@ float brightnessSlider = 1f;
 final static float COLOR_MAX = 1.0f;
 
 color mouseColor = 0;
+color otherMouseColor = 0;
+
+ScreenCapture scap;
+
+int timer, ptime;
 
 public void setup(){
   size(800,400);
@@ -29,9 +36,17 @@ public void setup(){
    .setRange(0,1)
    //.setNumberOfTickMarks(5)
    ;
+   
+   scap = new ScreenCapture();
+   timer = 0;
+   ptime = 0;
 }
 
 public void draw(){
+  int cur_time = millis();
+  timer += cur_time - ptime;
+  ptime = cur_time;
+  
   background(0,0,0);
   
     cursor();
@@ -50,8 +65,18 @@ public void draw(){
     mouseEvent();
   }
   
+  stroke(1);
   fill(mouseColor);
-  rect(WIDTH *1.4, 100, 100,100);
+  rect(WIDTH *1.5, 100, 100,100);
+  
+  stroke(1);
+  fill(otherMouseColor);
+  rect(WIDTH *.25, WIDTH*1.2, 100,100);
+  
+  if (timer>1000){
+    //captureColorAtPosition(mouseX,mouseY);
+    timer = 0;
+  }
 }
 
 void mouseEvent(){
@@ -63,6 +88,19 @@ void mouseEvent(){
     rect(mouseX,mouseY,3,3);
   }else{
   }
+}
+
+void keyReleased(){
+  
+    if(key=='c'){
+      captureColorAtPosition (mouseX,mouseY);
+  //java.awt.Point pt = ((PSurfaceAWT)surface).getLocationOnScreen();
+    }
+}
+
+void captureColorAtPosition(int x, int y){
+  otherMouseColor = scap.captureScreenColor ((Canvas)surface.getNative(), x,y);
+  println("rgb:",red(otherMouseColor),green(otherMouseColor), blue(otherMouseColor),'\n');
 }
 
 void slider(float theColor) {
