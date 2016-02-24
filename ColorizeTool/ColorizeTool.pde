@@ -28,18 +28,28 @@ public void setup(){
   colorMode(RGB,COLOR_MAX);
   
   
-  cp5 = new ControlP5(this);
+  cp5 = new ControlP5 (this);
   
-  cp5.addSlider("brightnessSlider")
-   .setPosition(WIDTH + .1*WIDTH,WIDTH*.1)
-   .setSize(20,(int)(WIDTH*.8))
-   .setRange(0,1)
+  cp5.addSlider ("brightnessSlider")
+   .setPosition (WIDTH + .1*WIDTH,WIDTH*.1)
+   .setSize (20,(int)(WIDTH*.8))
+   .setRange (0,1)
    //.setNumberOfTickMarks(5)
    ;
+   
+   setupGUI (cp5, new Rectangle (
+     int(width/2), 
+     int(height*.05),
+     width/2,
+     int(height*.8)
+     )
+   );
    
    scap = new ScreenCapture();
    timer = 0;
    ptime = 0;
+   
+   mouseColor = w.lastSample();
 }
 
 public void draw(){
@@ -49,13 +59,6 @@ public void draw(){
   
   background(0,0,0);
   
-    cursor();
-  if (mousePressed){
-    float v = (1f*mouseX/width);
-    //w.setBrightness(v);
-  }
-  
-  
   
   w.setBrightness(brightnessSlider);
   w.draw();
@@ -64,6 +67,11 @@ public void draw(){
   if(mousePressed){
     mouseEvent();
   }
+  //draw rect at sample position
+  PVector samPosition = w.lastSamplePosition();//w.sampleAt (mouseX,mouseY);
+  fill(1);
+  stroke(0);
+  rect (samPosition.x,samPosition.y,3,3);
   
   stroke(1);
   fill(mouseColor);
@@ -80,14 +88,19 @@ public void draw(){
 }
 
 void mouseEvent(){
-  if(w.inBounds(mouseX,mouseY)){
+  //if (w.inBounds (mouseX, mouseY)){
     noCursor();
-    mouseColor = get(mouseX,mouseY);
-    fill(1);
-    stroke(0);
-    rect(mouseX,mouseY,3,3);
-  }else{
-  }
+    mouseColor = w.sampleAt (mouseX, mouseY);//get(mouseX,mouseY);
+    //fill(1);
+    //stroke(0);
+    //rect(mouseX,mouseY,3,3);
+  //}else{
+  //}
+}
+
+void mouseReleased(){
+  
+    cursor();
 }
 
 void keyReleased(){

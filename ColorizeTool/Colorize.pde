@@ -9,6 +9,7 @@ class ColorWheel{
     private boolean dirty;
     int w,h;
     PVector center;
+    PVector samplePosition;
     
     private PVector ZERO;
     private PVector[] vectorBuffer;
@@ -26,6 +27,8 @@ class ColorWheel{
       dirty = true;
       setBrightness (COLOR_MAX);
       setupBuffer();
+      
+      samplePosition = new PVector(center.x,center.y);
     }
     
     private void setupBuffer(){
@@ -156,6 +159,47 @@ class ColorWheel{
       PVector mouse = vectorBuffer[1];
       mouse.set(x,y);
       //PVector center = vectorBuffer[2];
-      return PVector.dist(mouse,center)<w/2;
+      return PVector.dist(mouse,center)<center.x;
+    }
+    
+    public PVector lastSamplePosition(){
+      return samplePosition;
+    }
+    
+    private int viewBufferSample(int _x, int _y){
+      return viewBuffer().get (_x, _y);
+    }
+    
+    private int viewBufferSample(float _x, float _y){
+      return viewBufferSample ((int)_x, (int)_y);
+    }
+    
+    private int viewBufferSample(PVector p){
+      return viewBufferSample (p.x, p.y);
+    }
+    
+    public color sampleAt (int _x, int _y){
+      if (dirty){
+        drawWheel();
+      }
+      if (samplePosition.x == _x && samplePosition.y == _y){
+        return viewBufferSample (samplePosition);
+      }
+      
+      //find position inside wheel and return color
+      PVector targetPosition = vectorBuffer[1];
+      targetPosition.set (_x, _y);
+      float dist = PVector.dist (targetPosition, center);
+      if (dist > center.x){
+        targetPosition.normalize (targetPosition);
+        targetPosition.mult (center.x);
+        targetPosition.add (center);
+      }
+      samplePosition.set (targetPosition);
+      return viewBufferSample (targetPosition);
+    }
+    
+    public color lastSample(){
+      return viewBufferSample (lastSamplePosition());
     }
 }
