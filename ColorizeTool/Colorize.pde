@@ -2,6 +2,7 @@
   By Stewart Bracken, 2016
   See LICENCE.txt or LICENSE.md for licensing information
 */
+
 class ColorWheel{
     
     PGraphics wheel_buffer, mask, original_buffer;
@@ -13,7 +14,7 @@ class ColorWheel{
     
     private PVector ZERO;
     private PVector[] vectorBuffer;
-    private float[] colorTmp;
+    public float[] colorTmp;
     private PVector nCenter = new PVector(.5,.5);
     
     ColorWheel(int _w, int _h){
@@ -141,7 +142,9 @@ class ColorWheel{
       viewOut.image (fullColor,0,0);
       endBuffer (viewOut);
       dirty = false;
-    }
+        
+      //println("drawIteration",drawIteration++);
+  }
       
     void draw(){
       draw(0,0);
@@ -177,6 +180,10 @@ class ColorWheel{
     private int viewBufferSample(PVector p){
       return viewBufferSample (p.x, p.y);
     }
+   
+    public color sampleAt(float _x, float _y){
+      return sampleAt ((int)_x, (int)_y);
+    }
     
     public color sampleAt (int _x, int _y){
       if (dirty){
@@ -201,5 +208,17 @@ class ColorWheel{
     
     public color lastSample(){
       return viewBufferSample (lastSamplePosition());
+    }
+    
+    public void setSampleRGB(float r, float g, float b){
+      //call hsb code
+    }
+    public void setSampleHSB(float h, float s, float b){
+      float angle = h*TWO_PI;
+      float dist = s*center.x;
+      setBrightness(b);
+      float x = cos(angle)*dist;
+      float y = sin(angle)*dist;
+      float newColor = sampleAt (x + center.x,y+center.y);
     }
 }
