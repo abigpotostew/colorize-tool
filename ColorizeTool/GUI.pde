@@ -83,9 +83,9 @@ void updateGUISlidersRGB (float r, float g, float b){//, float h, float s, float
   setSlider (SliderIndex.RED, r);
   setSlider (SliderIndex.GREEN, g);
   setSlider (SliderIndex.BLUE, b);
-  /*float[] hsb = wheel.colorTmp;
+  float[] hsb = wheel.colorTmp;
   Color.RGBtoHSB(int(r*255), int(g*255), int(b*255), hsb);
   setSlider (SliderIndex.HUE, hsb[0]);
   setSlider (SliderIndex.SATURATION, hsb[1]);
-  setSlider (SliderIndex.BRIGHTNESS, hsb[2]);*/
+  setSlider (SliderIndex.BRIGHTNESS, hsb[2]);
 }

@@ -99,9 +99,10 @@ void mousePressed(){
 void mouseDownEvent(){
   if (colorWheelSelected){
     mouseColor = wheel.sampleAt (mouseX, mouseY);//get(mouseX,mouseY);
-    updateGUISliders(1f*(mouseColor >> 16 & 0xFF)/255, 
+    updateGUISlidersRGB(1f*(mouseColor >> 16 & 0xFF)/255, 
                      1f*(mouseColor >> 8 & 0xFF)/255,
                      1f*(mouseColor & 0xFF)/255);
+    
     //fill(1);
     //stroke(0);
     //rect(mouseX,mouseY,3,3);
