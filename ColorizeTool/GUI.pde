@@ -88,4 +88,7 @@ void updateGUISlidersRGB (float r, float g, float b){//, float h, float s, float
   setSlider (SliderIndex.HUE, hsb[0]);
   setSlider (SliderIndex.SATURATION, hsb[1]);
   setSlider (SliderIndex.BRIGHTNESS, hsb[2]);
+  
+  println(r,g,b);
+  println(hsb[0], hsb[1], hsb[2]);
 }

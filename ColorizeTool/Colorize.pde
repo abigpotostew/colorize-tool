@@ -12,15 +12,22 @@ class ColorWheel{
     PVector center;
     PVector samplePosition;
     
+    int INC;
+    
     private PVector ZERO;
     private PVector[] vectorBuffer;
     public float[] colorTmp;
     private PVector nCenter = new PVector(.5,.5);
     
+    private ColorStruct[] rgbhsbBuffer;
+    private ColorStruct lastSampleColor;
+    
     ColorWheel(int _w, int _h){
       vectorBuffer = vectorBuffer(5);
-      ZERO = vectorBuffer[3];
+      ZERO = vectorBuffer[0];
       colorTmp = new float[3];
+      rgbhsbBuffer = colorStructBuffer(3);
+      lastSampleColor = rgbhsbBuffer[0];
       
       w = _w;
       h = _h;
@@ -30,6 +37,7 @@ class ColorWheel{
       setupBuffer();
       
       samplePosition = new PVector(center.x,center.y);
+      
     }
     
     private void setupBuffer(){
@@ -74,46 +82,46 @@ class ColorWheel{
       generateWheel (original_buffer);
       endBuffer (original_buffer);
     }
+    
+    public void posToColor(int _x, int _y, ColorStruct _out){
+      PVector screen_point = vectorBuffer[1]; //normalized position of pixel
+      PVector normalized_point = vectorBuffer[2];
+      PVector target = vectorBuffer[3];
+      PVector n_target = vectorBuffer[4];
+      float hue=0, saturation;
+      float d=0,alpha;
+      
+      screen_point.set(_x,_y);
+      screen_point.normalize(normalized_point);
+      target.set (screen_point.x - center.x, screen_point.y - center.y);
+
+      d = PVector.dist (center, screen_point);
+      
+      hue = (float)Math.atan2(target.y, target.x);
+      if (hue<0){
+        hue+= TWO_PI;
+      }
+      hue = map (hue, 0, TWO_PI, 0, COLOR_MAX);
+      saturation = min(d,1f);
+      saturation = d/(center.x);
+      
+      _out.setHSB (hue, saturation, brightness);
+      _out.setRGB(Color.HSBtoRGB(hue, saturation, brightness));
+    }
+    
 
     // redraw from
     private void generateWheel(PGraphics pg){
       pg.loadPixels();
       int[] p = pg.pixels;
-      
-      int x,y, hsb=0;
-      float angle=0, saturation;
-      float d=0,alpha, r,g,b;
-      PVector screen_point = vectorBuffer[1]; //normalized position of pixel
-      PVector normalized_point = vectorBuffer[2];
-      PVector target = vectorBuffer[3];
-      PVector n_target = vectorBuffer[4];
+      ColorStruct rgbhsb = rgbhsbBuffer[1];
+      int x,y;
       for(int i=0;i<p.length;++i){
         x = i%w;
         y = i/w;
-        screen_point.set(x,y);
-        screen_point.normalize(normalized_point);
-        target.set (screen_point.x - center.x, screen_point.y - center.y);
-        //target.normalize(n_target); //normalize the target vector
-        
-        //d = PVector.dist (ZERO, target);
-        //d = PVector.dist (n_target, nCenter);//not correct
-        d = PVector.dist (center, screen_point);
-        
-        angle = (float)Math.atan2(target.y, target.x);
-        if (angle<0){
-          angle+= TWO_PI;
-        }
-        //alpha = map( alpha(pg.get(x,y)), 0,255, 0,1f);
-        angle = map (angle, 0, TWO_PI, 0, COLOR_MAX);
-        //saturation = clamp(2*d,0,1);
-        //saturation = PVector.dist(center,target) / center.x;
-        saturation = min(d,1f);
-        saturation = d/(center.x);
-        hsb = Color.HSBtoRGB(angle, saturation, brightness);
-        //hsb = (int)(d*255);
-        //print(d+", ");
+        posToColor (x,y,rgbhsb);
 
-        pg.stroke (hsb);
+        pg.stroke (rgbhsb.rgb);
         pg.point (x, y); //<>//
       }
       
@@ -153,9 +161,7 @@ class ColorWheel{
       if (dirty){
         drawWheel();
       }
-      //image (viewBuffer(),x,y);
       image(viewBuffer(),x,y);
-      //image(fullColorBuffer(),w,0);
     }
     
     public boolean inBounds(int x, int y){
@@ -170,7 +176,14 @@ class ColorWheel{
     }
     
     private int viewBufferSample(int _x, int _y){
-      return viewBuffer().get (_x, _y);
+      if (samplePosition.x != _x || samplePosition.y != _y){
+        posToColor (_x, _y, lastSampleColor);
+        
+      //println(_x,_y, INC++);
+      //println(lastSampleColor.r,lastSampleColor.g,lastSampleColor.b);
+      //println(lastSampleColor.h,lastSampleColor.s,lastSampleColor.bb);
+      }
+      return lastSampleColor.rgb;
     }
     
     private int viewBufferSample(float _x, float _y){
@@ -186,7 +199,7 @@ class ColorWheel{
     }
     
     public color sampleAt (int _x, int _y){
-      if (dirty){
+      if (dirty){ //<>//
         drawWheel();
       }
       if (samplePosition.x == _x && samplePosition.y == _y){
@@ -199,12 +212,20 @@ class ColorWheel{
       float dist = PVector.dist (targetPosition, center);
       if (dist > center.x){
         targetPosition.normalize (targetPosition);
-        targetPosition.mult (center.x);
+        targetPosition.mult (center.x*.98);
         targetPosition.add (center);
       }
+      //always floor for consistency
+      targetPosition.set ((int)targetPosition.x,(int)targetPosition.y);
+      color out = viewBufferSample (targetPosition);
       samplePosition.set (targetPosition);
-      return viewBufferSample (targetPosition);
+      return out;
     }
+    
+    //gui requests integer position. then set color for that position
+    //private void colorToPos (h,s,b){
+      
+    //}
     
     public color lastSample(){
       return viewBufferSample (lastSamplePosition());
@@ -220,5 +241,17 @@ class ColorWheel{
       float x = cos(angle)*dist;
       float y = sin(angle)*dist;
       float newColor = sampleAt (x + center.x,y+center.y);
+    }
+    
+    //rgb is [0..1]
+    public float[] RGBtoHSB (float r, float g, float b){
+      float[] tmp = colorTmp;
+      Color.RGBtoHSB(sRGB(r),sRGB(g),sRGB(b),tmp);
+      return tmp;
+    }
+    //conve
+    //convert color from 0..1 to 0..255 
+    int sRGB(float c){
+      return int(c*255);
     }
 }
