@@ -70,6 +70,7 @@ public void draw(){
   }
   //draw rect at sample position
   PVector samPosition = wheel.lastSamplePosition();//w.sampleAt (mouseX,mouseY);
+  println(samPosition);
   fill(1);
   stroke(0);
   rect (samPosition.x,samPosition.y,4,4);
@@ -98,10 +99,15 @@ void mousePressed(){
 
 void mouseDownEvent(){
   if (colorWheelSelected){
-    mouseColor = wheel.sampleAt (mouseX, mouseY);//get(mouseX,mouseY);
+    mouseColor = wheel.sampleAt (mouseX, mouseY);
+    
+    updateGUISliders (wheel.lastSampleColor());
+    
+    //get(mouseX,mouseY);
     /*updateGUISlidersRGB(1f*(mouseColor >> 16 & 0xFF)/255, 
                      1f*(mouseColor >> 8 & 0xFF)/255,
                      1f*(mouseColor & 0xFF)/255);*/
+     
     
     //fill(1);
     //stroke(0);
@@ -129,4 +135,4 @@ void keyReleased(){
 void captureColorAtPosition(int x, int y){
   otherMouseColor = scap.captureScreenColor ((Canvas)surface.getNative(), x,y);
   println("rgb:",red(otherMouseColor),green(otherMouseColor), blue(otherMouseColor),'\n');
-}
+} //<>//

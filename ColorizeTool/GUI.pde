@@ -24,13 +24,15 @@ void setupGUI(ControlP5 cp5, Rectangle dimensions){
   for(SliderIndex s : SliderIndex.values()){
     i = s.index();
     sliders[i] = cp5.addSlider (s.getName())
+     .setBroadcast(false) //temporarily don't call slider events
      .setLabel (s.getDisplayName())
      .setPosition ( (dimensions.width-barWidth)/2 + dimensions.x, 
      barHeight*i + (i>2?barHeight:0) + dimensions.y)
      .setSize (barWidth, (int)(barHeight*.9))
      .setRange (0f,1f)
      //.setLock (s==SliderIndex.SATURATION?true:false)
-     .setValue (1f)
+     .setValue (s==SliderIndex.SATURATION?0f:1f)
+     .setBroadcast(true)
    ;
   }
 }
@@ -56,7 +58,7 @@ void wheelByHSB(){
   float h = sliders[SliderIndex.HUE.index()].getValue(),
         s = sliders[SliderIndex.SATURATION.index()].getValue(),
         b = sliders[SliderIndex.BRIGHTNESS.index()].getValue();
-  //println(h,s,b);
+  println(h,s,b);
   wheel.setSampleHSB (h,s,b);
 }
 
@@ -75,20 +77,19 @@ void Sbrightness(float val) {
   wheelByHSB();
 }
 
+//this is called to override the value without triggering the above events
 void setSlider(SliderIndex si, float val){
+  sliders[si.index()].setBroadcast(false); //don't trigger gui events for this
   sliders[si.index()].setValue(val);
+  sliders[si.index()].setBroadcast(true);
 }
 
-void updateGUISlidersRGB (float r, float g, float b){//, float h, float s, float br
-  setSlider (SliderIndex.RED, r);
-  setSlider (SliderIndex.GREEN, g);
-  setSlider (SliderIndex.BLUE, b);
-  float[] hsb = wheel.colorTmp;
-  Color.RGBtoHSB(int(r*255), int(g*255), int(b*255), hsb);
-  setSlider (SliderIndex.HUE, hsb[0]);
-  setSlider (SliderIndex.SATURATION, hsb[1]);
-  setSlider (SliderIndex.BRIGHTNESS, hsb[2]);
-  
-  println(r,g,b);
-  println(hsb[0], hsb[1], hsb[2]);
+//newer
+void updateGUISliders (final ColorStruct lastSampleColor){
+  setSlider (SliderIndex.RED, lastSampleColor.r);
+  setSlider (SliderIndex.GREEN, lastSampleColor.g);
+  setSlider (SliderIndex.BLUE, lastSampleColor.b);
+  setSlider (SliderIndex.HUE, lastSampleColor.h);
+  setSlider (SliderIndex.SATURATION, lastSampleColor.s);
+  setSlider (SliderIndex.BRIGHTNESS, lastSampleColor.bb);
 }

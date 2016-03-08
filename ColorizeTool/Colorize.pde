@@ -1,7 +1,10 @@
-/*
+/* //<>// //<>//
   By Stewart Bracken, 2016
   See LICENCE.txt or LICENSE.md for licensing information
 */
+
+final int VECB_SAMPAT = 1,
+          VECB_SAMHSB = 5;
 
 class ColorWheel{
     
@@ -23,7 +26,7 @@ class ColorWheel{
     private ColorStruct lastSampleColor;
     
     ColorWheel(int _w, int _h){
-      vectorBuffer = vectorBuffer(5);
+      vectorBuffer = vectorBuffer(6);
       ZERO = vectorBuffer[0];
       colorTmp = new float[3];
       rgbhsbBuffer = colorStructBuffer(3);
@@ -83,7 +86,8 @@ class ColorWheel{
       endBuffer (original_buffer);
     }
     
-    public void posToColor(int _x, int _y, ColorStruct _out){
+    //private source of truth for color
+    private void posToColor(int _x, int _y, ColorStruct _out){
       PVector screen_point = vectorBuffer[1]; //normalized position of pixel
       PVector normalized_point = vectorBuffer[2];
       PVector target = vectorBuffer[3];
@@ -106,7 +110,7 @@ class ColorWheel{
       saturation = d/(center.x);
       
       _out.setHSB (hue, saturation, brightness);
-      _out.setRGB(Color.HSBtoRGB(hue, saturation, brightness));
+      _out.setRGB (Color.HSBtoRGB(hue, saturation, brightness));
     }
     
 
@@ -122,7 +126,7 @@ class ColorWheel{
         posToColor (x,y,rgbhsb);
 
         pg.stroke (rgbhsb.rgb);
-        pg.point (x, y); //<>//
+        pg.point (x, y);
       }
       
       pg.mask(mask);
@@ -133,6 +137,9 @@ class ColorWheel{
     
     //input [0..1]
     void setBrightness(float _bright){
+      if (_bright == brightness){
+        return;
+      }
       brightness = clamp(_bright, 0, COLOR_MAX);//map(, 0,255, 0,COLOR_MAX);
       dirty = true;
       //println(_bright);
@@ -192,14 +199,22 @@ class ColorWheel{
     
     private int viewBufferSample(PVector p){
       return viewBufferSample (p.x, p.y);
-    }
+    } //<>//
    
     public color sampleAt(float _x, float _y){
       return sampleAt ((int)_x, (int)_y);
     }
     
+    //public way to get most recent rgb and hsb colors at position
+    //this is the source of truth for color
+    // calls this after a sampleAt call
+    public ColorStruct lastSampleColor (){
+      return lastSampleColor;
+    }
+    
+    //return RGB
     public color sampleAt (int _x, int _y){
-      if (dirty){ //<>//
+      if (dirty){
         drawWheel();
       }
       if (samplePosition.x == _x && samplePosition.y == _y){
@@ -207,7 +222,7 @@ class ColorWheel{
       }
       
       //find position inside wheel and return color
-      PVector targetPosition = vectorBuffer[1];
+      PVector targetPosition = vectorBuffer[VECB_SAMPAT];
       targetPosition.set (_x, _y);
       float dist = PVector.dist (targetPosition, center);
       if (dist > center.x){
@@ -215,7 +230,7 @@ class ColorWheel{
         targetPosition.mult (center.x*.98);
         targetPosition.add (center);
       }
-      //always floor for consistency
+      //always floor for pixel sample consistency
       targetPosition.set ((int)targetPosition.x,(int)targetPosition.y);
       color out = viewBufferSample (targetPosition);
       samplePosition.set (targetPosition);
@@ -223,9 +238,16 @@ class ColorWheel{
     }
     
     //gui requests integer position. then set color for that position
-    //private void colorToPos (h,s,b){
+    private void colorToPos (float h, float s, float b, PVector out){
+      float angle = h*TWO_PI;
+      float dist = s*center.x;
+      float x = cos(angle)*dist;
+      float y = sin(angle)*dist;
       
-    //}
+      out.set (x,y);
+      
+      println (h,s,b,out);
+    }
     
     public color lastSample(){
       return viewBufferSample (lastSamplePosition());
@@ -234,13 +256,14 @@ class ColorWheel{
     public void setSampleRGB(float r, float g, float b){
       //call hsb code
     }
+    
+    //convert hsb color to position on wheel and sample that
     public void setSampleHSB(float h, float s, float b){
-      float angle = h*TWO_PI;
-      float dist = s*center.x;
-      setBrightness(b);
-      float x = cos(angle)*dist;
-      float y = sin(angle)*dist;
-      float newColor = sampleAt (x + center.x,y+center.y);
+      PVector p = vectorBuffer[VECB_SAMHSB];
+      colorToPos (h,s,b, p);
+      setBrightness (b);
+      float newColor = sampleAt (p.x, p.y);
+      println("before:",s, "after:",lastSampleColor().s, "in pos:",p, "out pos", samplePosition);
     }
     
     //rgb is [0..1]
