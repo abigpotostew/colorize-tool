@@ -3,9 +3,6 @@
   See LICENCE.txt or LICENSE.md for licensing information
 */
 
-final int VECB_SAMPAT = 1,
-          VECB_SAMHSB = 5;
-
 class ColorWheel{
     
     PGraphics wheel_buffer, mask, original_buffer;
@@ -18,16 +15,16 @@ class ColorWheel{
     int INC;
     
     private PVector ZERO;
-    private PVector[] vectorBuffer;
+    private PVectorPool vpool;
     public float[] colorTmp;
-    private PVector nCenter = new PVector(.5,.5);
+    //private PVector nCenter = new PVector(.5,.5);
     
     private ColorStruct[] rgbhsbBuffer;
     private ColorStruct lastSampleColor;
     
     ColorWheel(int _w, int _h){
-      vectorBuffer = vectorBuffer(6);
-      ZERO = vectorBuffer[0];
+      vpool = new PVectorPool(6);
+      ZERO = vpool.borrowObject();
       colorTmp = new float[3];
       rgbhsbBuffer = colorStructBuffer(3);
       lastSampleColor = rgbhsbBuffer[0];
@@ -88,10 +85,9 @@ class ColorWheel{
     
     //private source of truth for color
     private void posToColor(int _x, int _y, ColorStruct _out){
-      PVector screen_point = vectorBuffer[1]; //normalized position of pixel
-      PVector normalized_point = vectorBuffer[2];
-      PVector target = vectorBuffer[3];
-      PVector n_target = vectorBuffer[4];
+      PVector screen_point = vpool.borrowObject(); //normalized position of pixel
+      PVector normalized_point = vpool.borrowObject();
+      PVector target = vpool.borrowObject();
       float hue=0, saturation;
       float d=0,alpha;
       
@@ -111,6 +107,10 @@ class ColorWheel{
       
       _out.setHSB (hue, saturation, brightness);
       _out.setRGB (Color.HSBtoRGB(hue, saturation, brightness));
+      
+      vpool.returnObject (screen_point);
+      vpool.returnObject (normalized_point);
+      vpool.returnObject (target);
     }
     
 
@@ -140,7 +140,7 @@ class ColorWheel{
       if (_bright == brightness){
         return;
       }
-      brightness = clamp(_bright, 0, COLOR_MAX);//map(, 0,255, 0,COLOR_MAX);
+      brightness = clamp(_bright, 0, COLOR_MAX);
       dirty = true;
       //println(_bright);
     }
@@ -172,10 +172,11 @@ class ColorWheel{
     }
     
     public boolean inBounds(int x, int y){
-      PVector mouse = vectorBuffer[1];
+      PVector mouse = vpool.borrowObject();
       mouse.set(x,y);
-      //PVector center = vectorBuffer[2];
-      return PVector.dist(mouse,center)<center.x;
+      boolean output =  PVector.dist(mouse,center)<center.x;
+      vpool.returnObject (mouse);
+      return output;
     }
     
     public PVector lastSamplePosition(){
@@ -208,7 +209,7 @@ class ColorWheel{
     //public way to get most recent rgb and hsb colors at position
     //this is the source of truth for color
     // calls this after a sampleAt call
-    public ColorStruct lastSampleColor (){
+    public final ColorStruct lastSampleColor (){
       return lastSampleColor;
     }
     
@@ -222,7 +223,7 @@ class ColorWheel{
       }
       
       //find position inside wheel and return color
-      PVector targetPosition = vectorBuffer[VECB_SAMPAT];
+      PVector targetPosition = vpool.borrowObject();
       targetPosition.set (_x, _y);
       float dist = PVector.dist (targetPosition, center);
       if (dist > center.x){
@@ -234,6 +235,7 @@ class ColorWheel{
       targetPosition.set ((int)targetPosition.x,(int)targetPosition.y);
       color out = viewBufferSample (targetPosition);
       samplePosition.set (targetPosition);
+      vpool.returnObject (targetPosition);
       return out;
     }
     
@@ -243,10 +245,11 @@ class ColorWheel{
       float dist = s*center.x;
       float x = cos(angle)*dist;
       float y = sin(angle)*dist;
-      
       out.set (x,y);
       
-      println (h,s,b,out);
+      //println ("a",angle, "dist",dist, out);
+      
+      //println (h,s,b,out);
     }
     
     public color lastSample(){
@@ -259,11 +262,13 @@ class ColorWheel{
     
     //convert hsb color to position on wheel and sample that
     public void setSampleHSB(float h, float s, float b){
-      PVector p = vectorBuffer[VECB_SAMHSB];
-      colorToPos (h,s,b, p);
+      PVector p = vpool.borrowObject();
+      colorToPos (h,s,b, p); //not the problem
       setBrightness (b);
+      println("Before", lastSamplePosition() );
       float newColor = sampleAt (p.x, p.y);
-      println("before:",s, "after:",lastSampleColor().s, "in pos:",p, "out pos", samplePosition);
+      println("before:",s, "after:",lastSampleColor().s, "in pos:",p, "out pos", lastSamplePosition());
+      vpool.returnObject (p);
     }
     
     //rgb is [0..1]

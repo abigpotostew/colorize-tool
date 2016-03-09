@@ -70,7 +70,8 @@ public void draw(){
   }
   //draw rect at sample position
   PVector samPosition = wheel.lastSamplePosition();//w.sampleAt (mouseX,mouseY);
-  println(samPosition);
+  mouseColor = wheel.lastSampleColor().rgb;
+  //println(samPosition);
   fill(1);
   stroke(0);
   rect (samPosition.x,samPosition.y,4,4);
