@@ -202,9 +202,6 @@ class ColorWheel{
       return viewBufferSample (p.x, p.y);
     } //<>//
    
-    public color sampleAt(float _x, float _y){
-      return sampleAt ((int)_x, (int)_y);
-    }
     
     //public way to get most recent rgb and hsb colors at position
     //this is the source of truth for color
@@ -213,6 +210,12 @@ class ColorWheel{
       return lastSampleColor;
     }
     
+    public color sampleAt(PVector p){
+      return sampleAt (p.x, p.y);
+    }
+    public color sampleAt(float _x, float _y){
+      return sampleAt ((int)_x, (int)_y);
+    }
     //return RGB
     public color sampleAt (int _x, int _y){
       if (dirty){
@@ -225,12 +228,14 @@ class ColorWheel{
       //find position inside wheel and return color
       PVector targetPosition = vpool.borrowObject();
       targetPosition.set (_x, _y);
+      
       float dist = PVector.dist (targetPosition, center);
       if (dist > center.x){
         targetPosition.normalize (targetPosition);
-        targetPosition.mult (center.x*.98);
+        targetPosition.mult (center.x * .98);
         targetPosition.add (center);
       }
+      
       //always floor for pixel sample consistency
       targetPosition.set ((int)targetPosition.x,(int)targetPosition.y);
       color out = viewBufferSample (targetPosition);
@@ -245,11 +250,7 @@ class ColorWheel{
       float dist = s*center.x;
       float x = cos(angle)*dist;
       float y = sin(angle)*dist;
-      out.set (x,y);
-      
-      //println ("a",angle, "dist",dist, out);
-      
-      //println (h,s,b,out);
+      out.set (x+center.x,y+center.x);
     }
     
     public color lastSample(){
@@ -258,6 +259,9 @@ class ColorWheel{
     
     public void setSampleRGB(float r, float g, float b){
       //call hsb code
+      //rgb to hsb
+      float[] hsb = RGBtoHSB (r,g,b);
+      setSampleHSB (hsb[0], hsb[1], hsb[2]);
     }
     
     //convert hsb color to position on wheel and sample that
@@ -265,9 +269,7 @@ class ColorWheel{
       PVector p = vpool.borrowObject();
       colorToPos (h,s,b, p); //not the problem
       setBrightness (b);
-      println("Before", lastSamplePosition() );
-      float newColor = sampleAt (p.x, p.y);
-      println("before:",s, "after:",lastSampleColor().s, "in pos:",p, "out pos", lastSamplePosition());
+      float newColor = sampleAt (p);
       vpool.returnObject (p);
     }
     
@@ -277,7 +279,6 @@ class ColorWheel{
       Color.RGBtoHSB(sRGB(r),sRGB(g),sRGB(b),tmp);
       return tmp;
     }
-    //conve
     //convert color from 0..1 to 0..255 
     int sRGB(float c){
       return int(c*255);

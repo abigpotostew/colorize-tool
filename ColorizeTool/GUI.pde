@@ -58,8 +58,9 @@ void wheelByHSB(){
   float h = sliders[SliderIndex.HUE.index()].getValue(),
         s = sliders[SliderIndex.SATURATION.index()].getValue(),
         b = sliders[SliderIndex.BRIGHTNESS.index()].getValue();
-  println(h,s,b);
+  //println(h,s,b);
   wheel.setSampleHSB (h,s,b);
+  updateRGBSliders (wheel.lastSampleColor());
 }
 
 void SHue(float theColor) {
@@ -78,7 +79,7 @@ void Sbrightness(float val) {
 }
 
 //this is called to override the value without triggering the above events
-void setSlider(SliderIndex si, float val){
+void setSlider (SliderIndex si, float val){
   sliders[si.index()].setBroadcast(false); //don't trigger gui events for this
   sliders[si.index()].setValue(val);
   sliders[si.index()].setBroadcast(true);
@@ -86,10 +87,14 @@ void setSlider(SliderIndex si, float val){
 
 //newer
 void updateGUISliders (final ColorStruct lastSampleColor){
-  setSlider (SliderIndex.RED, lastSampleColor.r);
-  setSlider (SliderIndex.GREEN, lastSampleColor.g);
-  setSlider (SliderIndex.BLUE, lastSampleColor.b);
+  updateRGBSliders (lastSampleColor);
   setSlider (SliderIndex.HUE, lastSampleColor.h);
   setSlider (SliderIndex.SATURATION, lastSampleColor.s);
   setSlider (SliderIndex.BRIGHTNESS, lastSampleColor.bb);
+}
+
+void updateRGBSliders(final ColorStruct lastSampleColor){
+  setSlider (SliderIndex.RED, lastSampleColor.r);
+  setSlider (SliderIndex.GREEN, lastSampleColor.g);
+  setSlider (SliderIndex.BLUE, lastSampleColor.b);
 }

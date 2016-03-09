@@ -94,7 +94,7 @@ void mousePressed(){
   if (wheel.inBounds (mouseX, mouseY)){
     colorWheelSelected = true;
     noCursor();
-    println("pressed");
+    //println("pressed");
   }
 }
 
@@ -135,5 +135,5 @@ void keyReleased(){
 
 void captureColorAtPosition(int x, int y){
   otherMouseColor = scap.captureScreenColor ((Canvas)surface.getNative(), x,y);
-  println("rgb:",red(otherMouseColor),green(otherMouseColor), blue(otherMouseColor),'\n');
+  //println("rgb:",red(otherMouseColor),green(otherMouseColor), blue(otherMouseColor),'\n');
 } //<>//
