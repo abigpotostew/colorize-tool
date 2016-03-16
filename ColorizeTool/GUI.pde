@@ -44,22 +44,39 @@ void sliderEvent(SliderIndex si, float val){
 
 void SRed(float theColor) {
   sliderEvent (SliderIndex.RED, theColor);
+  wheelByRGB();
 }
 
 void SGreen(float theColor) {
   sliderEvent (SliderIndex.GREEN, theColor);
+  wheelByRGB();
 }
 
 void SBlue(float theColor) {
   sliderEvent (SliderIndex.BLUE, theColor);
+  wheelByRGB();
 }
 
+void wheelByRGB(){
+  float r = sliders[SliderIndex.RED.index()].getValue(),
+        g = sliders[SliderIndex.GREEN.index()].getValue(),
+        b = sliders[SliderIndex.BLUE.index()].getValue();
+  wheel.setSampleRGB (r,g,b);
+  updateHSBSliders (wheel.lastSampleColor());
+}
+
+void print_3colors(float a,float b, float c, String premsg){
+  println((premsg!=null?premsg:"") + String.format(" < %.2f, %.2f, %.2f>",a,b,c));
+}
+
+//sets RGB sliders using hsb slider values
 void wheelByHSB(){
   float h = sliders[SliderIndex.HUE.index()].getValue(),
         s = sliders[SliderIndex.SATURATION.index()].getValue(),
         b = sliders[SliderIndex.BRIGHTNESS.index()].getValue();
-  //println(h,s,b);
+  print_3colors(h,s,b,"BEFORE:");
   wheel.setSampleHSB (h,s,b);
+  println (wheel.lastSampleColor());
   updateRGBSliders (wheel.lastSampleColor());
 }
 
@@ -88,13 +105,17 @@ void setSlider (SliderIndex si, float val){
 //newer
 void updateGUISliders (final ColorStruct lastSampleColor){
   updateRGBSliders (lastSampleColor);
-  setSlider (SliderIndex.HUE, lastSampleColor.h);
-  setSlider (SliderIndex.SATURATION, lastSampleColor.s);
-  setSlider (SliderIndex.BRIGHTNESS, lastSampleColor.bb);
+  updateHSBSliders (lastSampleColor);
 }
 
 void updateRGBSliders(final ColorStruct lastSampleColor){
   setSlider (SliderIndex.RED, lastSampleColor.r);
   setSlider (SliderIndex.GREEN, lastSampleColor.g);
   setSlider (SliderIndex.BLUE, lastSampleColor.b);
+}
+
+void updateHSBSliders(final ColorStruct lastSampleColor){
+  setSlider (SliderIndex.HUE, lastSampleColor.h);
+  setSlider (SliderIndex.SATURATION, lastSampleColor.s);
+  setSlider (SliderIndex.BRIGHTNESS, lastSampleColor.bb);
 }

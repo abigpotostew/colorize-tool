@@ -1,3 +1,5 @@
+import java.text.DecimalFormat;
+
 class ColorStruct{
   public color rgb;
   public float r,g,b;
@@ -9,11 +11,14 @@ class ColorStruct{
     b = 1f*(mouseColor & 0xFF)/255;
   }
   void setHSB (float hue, float saturation, float brightness){
-    h = hue;
+    h = min(hue,1f);
     s = saturation;
     bb = brightness;
   }
   
+  public String toString(){
+    return String.format("RGB: < %.2f, %.2f, %.2f>, HSB: < %.2f, %.2f, %.2f>",r,g,b,h,s,bb);
+  }
 }
 
 ColorStruct[] colorStructBuffer(int n){
